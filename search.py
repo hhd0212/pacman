@@ -1,21 +1,5 @@
-# search.py
-# ---------
-# Licensing Information:  You are free to use or extend these projects for
-# educational purposes provided that (1) you do not distribute or publish
-# solutions, (2) you retain this notice, and (3) you provide clear
-# attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
-# Attribution Information: The Pacman AI projects were developed at UC Berkeley.
-# The core projects and autograders were primarily created by John DeNero
-# (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
-# Student side autograding was added by Brad Miller, Nick Hay, and
-# Pieter Abbeel (pabbeel@cs.berkeley.edu).
-
-
-"""
-In search.py, you will implement generic search algorithms which are called by
-Pacman agents (in searchAgents.py).
-"""
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function
 
 import util
 
@@ -60,8 +44,8 @@ class SearchProblem:
         The sequence must be composed of legal moves.
         """
         util.raiseNotDefined()
-
-
+        
+        
 def tinyMazeSearch(problem):
     """
     Returns a sequence of moves that solves tinyMaze.  For any other maze, the
@@ -87,17 +71,80 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Stack
+
+    start_state = problem.getStartState()
+
+    S = Stack()
+    visited = set()
+
+    S.push((start_state, []))
+
+    while not S.isEmpty():
+        state, path = S.pop()
+
+        if problem.isGoalState(state):
+            return path
+
+        if state not in visited:
+            visited.add(state)
+
+            for next_state, action, _ in problem.getSuccessors(state):
+                if next_state not in visited:
+                    S.push((next_state, path + [action]))
+
+    return []
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import Queue
+
+    Q = Queue()
+    Q.push((problem.getStartState(), []))  # (state, path)
+    visited = set()
+
+    while not Q.isEmpty():
+        state, path = Q.pop()
+
+        if problem.isGoalState(state):
+            return path
+
+        if state not in visited:
+            visited.add(state)
+
+            for next_state, action, _ in problem.getSuccessors(state):
+                if next_state not in visited:
+                    Q.push((next_state, path + [action]))
+
+    return []
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+
+    PQ = PriorityQueue()                       
+    PQ.push((problem.getStartState(), [], 0), 0)
+    visited = {}                                   
+
+    while not PQ.isEmpty():
+        state, path, cost = PQ.pop()
+
+        if state in visited and visited[state] <= cost:
+            continue
+        visited[state] = cost
+
+        if problem.isGoalState(state):
+            return path
+
+        for next_state, action, step in problem.getSuccessors(state):
+            new_cost = cost + step
+            
+            if next_state not in visited or new_cost < visited[next_state]:
+                PQ.push((next_state, path + [action], new_cost), new_cost)
+
+    return []
 
 def nullHeuristic(state, problem=None):
     """
@@ -109,11 +156,35 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from util import PriorityQueue
+    
+    PQ = PriorityQueue()
+    start = problem.getStartState()
+    startH = heuristic(start, problem)
+    PQ.push((start, [], 0), startH)
+    best = {}
+
+    while not PQ.isEmpty():
+        state, path, g = PQ.pop()
+        
+        if state in best and best[state] <= g:
+            continue
+        best[state] = g
+
+        if problem.isGoalState(state):
+            return path
+        
+        for next_state, action, step in problem.getSuccessors(state):
+            newG = g + step
+
+            if next_state not in best or newG < best[next_state]:
+                f = newG + heuristic(next_state, problem)
+                PQ.push((next_state, path + [action], newG), f)
+    return []
 
 
 # Abbreviations
-bfs = breadthFirstSearch
 dfs = depthFirstSearch
-astar = aStarSearch
+bfs = breadthFirstSearch
 ucs = uniformCostSearch
+astar = aStarSearch
